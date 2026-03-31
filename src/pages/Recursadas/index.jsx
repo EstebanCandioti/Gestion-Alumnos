@@ -21,38 +21,19 @@ const VACIA = {
   activa: true,
 }
 
-function FilaFiltros({ label, children }) {
-  return (
-    <div className="mb-2">
-      <p className="text-xs text-gray-400 mb-1">{label}</p>
-      <div className="flex gap-2 overflow-x-auto pb-1">{children}</div>
-    </div>
-  )
-}
-
 export default function Recursadas() {
   const { recursadas, cargando, recargar } = useRecursadas()
   const { alumnos } = useAlumnos()
   const { escuelas } = useEscuelas()
   const [filtroDia, setFiltroDia] = useState('')
-  const [filtroEscuela, setFiltroEscuela] = useState('')
-  const [filtroAnio, setFiltroAnio] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState(VACIA)
   const [guardando, setGuardando] = useState(false)
 
-  // Años presentes en las recursadas cargadas
-  const aniosDisponibles = [...new Set(
-    recursadas.map((r) => r.alumno?.anio_actual).filter(Boolean)
-  )].sort()
-
-  const recursadasFiltradas = recursadas.filter((r) => {
-    if (filtroDia && r.dia_semana !== filtroDia) return false
-    if (filtroEscuela && r.escuela_destino_id !== filtroEscuela) return false
-    if (filtroAnio && String(r.alumno?.anio_actual) !== filtroAnio) return false
-    return true
-  })
+  const recursadasFiltradas = filtroDia
+    ? recursadas.filter((r) => r.dia_semana === filtroDia)
+    : recursadas
 
   function abrirCrear() {
     setEditando(null)
@@ -125,60 +106,51 @@ export default function Recursadas() {
     }
   }
 
-  const chip = (activo) =>
-    `px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-      activo ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
-    }`
-
   const inputClase = "mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 
   return (
-    <div className="p-4 pb-24 md:pb-4">
+    <div className="p-4 pb-20 md:pb-4">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Recursadas</h1>
         <Boton onClick={abrirCrear}>+ Nueva</Boton>
       </div>
 
-      <FilaFiltros label="Día">
-        <button className={chip(!filtroDia)} onClick={() => setFiltroDia('')}>Todos</button>
+      {/* Filtro por día */}
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+        <button
+          onClick={() => setFiltroDia('')}
+          className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+            filtroDia === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          Todos
+        </button>
         {DIAS_SEMANA.map((dia) => (
-          <button key={dia} className={`${chip(filtroDia === dia)} capitalize`} onClick={() => setFiltroDia(dia)}>
+          <button
+            key={dia}
+            onClick={() => setFiltroDia(dia)}
+            className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap capitalize transition-colors ${
+              filtroDia === dia ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+            }`}
+          >
             {dia}
           </button>
         ))}
-      </FilaFiltros>
-
-      <FilaFiltros label="Escuela destino">
-        <button className={chip(!filtroEscuela)} onClick={() => setFiltroEscuela('')}>Todas</button>
-        {escuelas.map((e) => (
-          <button key={e.id} className={chip(filtroEscuela === e.id)} onClick={() => setFiltroEscuela(e.id)}>
-            {e.nombre}
-          </button>
-        ))}
-      </FilaFiltros>
-
-      <FilaFiltros label="Año del alumno">
-        <button className={chip(!filtroAnio)} onClick={() => setFiltroAnio('')}>Todos</button>
-        {aniosDisponibles.map((anio) => (
-          <button key={anio} className={chip(filtroAnio === String(anio))} onClick={() => setFiltroAnio(String(anio))}>
-            {anio}° año
-          </button>
-        ))}
-      </FilaFiltros>
+      </div>
 
       {cargando && <Spinner />}
 
       {!cargando && recursadasFiltradas.length === 0 && (
-        <p className="text-center text-gray-400 py-12">No hay recursadas para el filtro seleccionado</p>
+        <p className="text-center text-gray-400 py-12">No hay recursadas{filtroDia ? ` para el ${filtroDia}` : ''}</p>
       )}
 
-      <div className="flex flex-col gap-3 mt-2">
+      <div className="flex flex-col gap-3">
         {recursadasFiltradas.map((r) => (
           <div key={r.id} className={`bg-white rounded-xl shadow-sm border p-4 transition-opacity ${r.activa ? 'border-gray-100' : 'border-gray-200 opacity-60'}`}>
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-800 truncate">{r.alumno?.apellido}, {r.alumno?.nombre}</p>
-                <p className="text-sm text-gray-500">{r.materia} · <span className="capitalize">{r.dia_semana}</span> · {r.alumno?.anio_actual}° año</p>
+                <p className="text-sm text-gray-500">{r.materia} · <span className="capitalize">{r.dia_semana}</span></p>
                 <p className="text-sm text-gray-400">{formatearHora(r.hora_inicio)} – {formatearHora(r.hora_fin)} · {r.escuela_destino?.nombre}</p>
               </div>
               <div className="flex flex-col gap-1 items-end shrink-0">
