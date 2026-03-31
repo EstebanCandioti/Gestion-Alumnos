@@ -17,13 +17,18 @@ export default function Alumnos() {
   const { recursadas } = useRecursadas()
   const [filtroEscuela, setFiltroEscuela] = useState('')
   const [filtroDia, setFiltroDia] = useState('')
+  const [filtroAnio, setFiltroAnio] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState(VACIO)
   const [guardando, setGuardando] = useState(false)
 
+  // Años presentes entre los alumnos cargados
+  const aniosDisponibles = [...new Set(alumnos.map((a) => a.anio_actual))].sort()
+
   const alumnosFiltrados = alumnos.filter((a) => {
     if (filtroEscuela && a.escuela_id !== filtroEscuela) return false
+    if (filtroAnio && String(a.anio_actual) !== filtroAnio) return false
     if (filtroDia) {
       const tieneRecursadaEseDia = recursadas.some(
         (r) => r.alumno_id === a.id && r.dia_semana === filtroDia
@@ -104,6 +109,9 @@ export default function Alumnos() {
       </div>
 
       {/* Filtro por escuela */}
+      <div className="mb-1">
+        <p className="text-xs text-gray-400 mb-1">Escuela de origen</p>
+      </div>
       <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
         <button className={claseFiltro(!filtroEscuela)} onClick={() => setFiltroEscuela('')}>
           Todas las escuelas
@@ -115,7 +123,23 @@ export default function Alumnos() {
         ))}
       </div>
 
+      {/* Filtro por año */}
+      <div className="mb-1">
+        <p className="text-xs text-gray-400 mb-1">Año</p>
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
+          <button className={claseFiltro(!filtroAnio)} onClick={() => setFiltroAnio('')}>Todos</button>
+          {aniosDisponibles.map((anio) => (
+            <button key={anio} className={claseFiltro(filtroAnio === String(anio))} onClick={() => setFiltroAnio(String(anio))}>
+              {anio}° año
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Filtro por día */}
+      <div className="mb-1">
+        <p className="text-xs text-gray-400 mb-1">Día que recursa</p>
+      </div>
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
         <button className={claseFiltro(!filtroDia)} onClick={() => setFiltroDia('')}>
           Todos los días
